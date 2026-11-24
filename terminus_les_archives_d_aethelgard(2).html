@@ -1,0 +1,1153 @@
+<!DOCTYPE html>
+<html lang="fr" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Terminus : Les Archives d'Aethelgard</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome CDN -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Fonts Google -->
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .font-mono {
+            font-family: 'Fira Code', monospace;
+        }
+        /* Custom scrollbars */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(15, 23, 42, 0.6);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(51, 65, 85, 0.8);
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(71, 85, 105, 1);
+        }
+    </style>
+</head>
+<body class="bg-slate-950 text-slate-100 h-screen w-screen overflow-hidden flex flex-col select-none">
+
+    <!-- En-tête principal -->
+    <header class="h-14 bg-slate-900/90 border-b border-slate-800 px-4 flex items-center justify-between flex-shrink-0 shadow-md">
+        <div class="flex items-center gap-3">
+            <div class="w-8 h-8 rounded-lg bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400">
+                <i class="fa-solid fa-terminal text-sm"></i>
+            </div>
+            <div>
+                <h1 class="font-bold text-slate-100 text-sm md:text-base tracking-wide flex items-center gap-2">
+                    Terminus <span class="text-xs px-2 py-0.5 rounded bg-amber-500/10 border border-amber-500/30 text-amber-400 font-mono">ARCHIVES D'AETHELGARD</span>
+                </h1>
+            </div>
+        </div>
+        <div class="flex items-center gap-3">
+            <button id="reset-btn" title="Réinitialiser l'aventure" class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-rose-950 hover:text-rose-300 border border-slate-700 hover:border-rose-800 text-xs text-slate-300 transition flex items-center gap-1.5">
+                <i class="fa-solid fa-rotate-right"></i>
+                <span class="hidden sm:inline">Réinitialiser</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- Zone principale : Grille adaptative -->
+    <main class="flex-1 min-h-0 flex flex-col lg:flex-row p-3 md:p-4 gap-4 overflow-hidden">
+        
+        <!-- Colonne Gauche : Terminal (Occupe tout le reste de la hauteur) -->
+        <section class="flex-1 min-h-0 bg-slate-900/90 rounded-xl border border-slate-800 flex flex-col shadow-2xl overflow-hidden">
+            
+            <!-- Barre de titre de la fenêtre Terminal (Fixe) -->
+            <div class="h-10 bg-slate-950/80 px-4 flex items-center justify-between border-b border-slate-800 flex-shrink-0 select-none">
+                <div class="flex items-center gap-2">
+                    <span class="w-3 h-3 rounded-full bg-rose-500/80 inline-block"></span>
+                    <span class="w-3 h-3 rounded-full bg-amber-500/80 inline-block"></span>
+                    <span class="w-3 h-3 rounded-full bg-emerald-500/80 inline-block"></span>
+                    <span class="ml-2 font-mono text-xs text-slate-400 flex items-center gap-2">
+                        <i class="fa-solid fa-folder-closed text-amber-400/80"></i>
+                        <span id="terminal-pwd-display">/</span>
+                    </span>
+                </div>
+                <div class="text-xs text-slate-500 font-mono">bash v4.4 - Terminus OS</div>
+            </div>
+
+            <!-- Zone de sortie du Terminal (SEULE cette zone défile en interne) -->
+            <div id="terminal-output" class="flex-1 min-h-0 overflow-y-auto p-4 font-mono text-sm space-y-2 scroll-smooth">
+                <!-- Les messages et sorties s'affichent ici -->
+            </div>
+
+            <!-- Barre de Saisie du Terminal (Fixe au bas du terminal) -->
+            <div class="p-3 bg-slate-950/90 border-t border-slate-800 flex items-center gap-2 flex-shrink-0 font-mono">
+                <span class="text-emerald-400 font-bold text-sm select-none" id="prompt-label">aventurier@aethelgard:<span id="prompt-path">/</span>$&nbsp;</span>
+                <div class="flex-1 flex items-center">
+                    <textarea id="terminal-input" rows="1" class="w-full bg-transparent text-slate-100 placeholder-slate-600 focus:outline-none resize-none overflow-hidden font-mono text-sm leading-tight" placeholder="Entrez votre commande..." autoFocus></textarea>
+                </div>
+                <button id="send-cmd-btn" class="px-3 py-1 bg-emerald-600 hover:bg-emerald-500 text-slate-950 font-bold text-xs rounded transition flex items-center gap-1">
+                    <span>EXEC</span>
+                    <i class="fa-solid fa-arrow-right text-[10px]"></i>
+                </button>
+            </div>
+        </section>
+
+        <!-- Colonne Droite : Objectifs & Progression (Verrouillée à la hauteur disponible) -->
+        <section class="w-full lg:w-[420px] flex-shrink-0 h-full flex flex-col gap-3 min-h-0 overflow-hidden">
+            
+            <!-- Carte 1 : Objectif en cours (TOUJOURS VISIBLE EN HAUT À DROITE) -->
+            <div class="bg-slate-900/90 rounded-xl border border-slate-800 p-4 shadow-xl flex flex-col flex-shrink-0 border-l-4 border-l-emerald-500">
+                <div class="flex items-center justify-between mb-2">
+                    <span id="chapter-badge" class="text-[11px] uppercase font-bold tracking-wider px-2 py-0.5 rounded bg-amber-500/10 text-amber-400 border border-amber-500/20">
+                        CHAPITRE 1
+                    </span>
+                    <span id="quest-number-badge" class="text-xs text-slate-400 font-mono">Quête 1 / 32</span>
+                </div>
+                
+                <h2 id="quest-title" class="text-lg font-bold text-slate-100 mb-2">Chargement de la quête...</h2>
+                <p id="quest-description" class="text-xs text-slate-300 leading-relaxed mb-3">...</p>
+                
+                <div class="p-2.5 rounded-lg bg-slate-950 border border-slate-800 mb-3">
+                    <div class="text-[11px] text-emerald-400 font-bold uppercase tracking-wider mb-1 flex items-center gap-1.5">
+                        <i class="fa-solid fa-bullseye"></i> OBJECTIF EN COURS :
+                    </div>
+                    <div id="quest-objective" class="text-xs font-mono text-slate-200 font-medium">...</div>
+                </div>
+
+                <!-- Boutons d'Action / Indices -->
+                <div class="flex items-center gap-2">
+                    <button id="hint-btn" class="flex-1 py-1.5 px-3 bg-slate-800 hover:bg-slate-700 text-amber-300 text-xs rounded-lg border border-slate-700 transition flex items-center justify-center gap-1.5">
+                        <i class="fa-solid fa-lightbulb text-amber-400"></i>
+                        <span id="hint-btn-text">Indice (1/2)</span>
+                    </button>
+                    <button id="skip-btn" class="py-1.5 px-3 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs rounded-lg border border-slate-700 transition flex items-center gap-1.5">
+                        <span>Passer</span>
+                        <i class="fa-solid fa-forward text-xs"></i>
+                    </button>
+                </div>
+
+                <!-- Zone d'affichage des indices -->
+                <div id="hint-box" class="hidden mt-3 p-3 rounded-lg bg-amber-950/30 border border-amber-800/50 text-xs text-amber-200 font-mono leading-relaxed">
+                </div>
+            </div>
+
+            <!-- Zone défilante secondaire pour le Sélecteur & Grimoire -->
+            <div class="flex-1 min-h-0 overflow-y-auto space-y-3 pr-1">
+                
+                <!-- Carte 2 : Navigation dans les chapitres & quêtes -->
+                <div class="bg-slate-900/90 rounded-xl border border-slate-800 p-3 shadow-xl">
+                    <label for="quest-select" class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                        <i class="fa-solid fa-compass text-slate-400"></i> Navigation dans les quêtes :
+                    </label>
+                    <select id="quest-select" class="w-full bg-slate-950 border border-slate-700 text-slate-200 text-xs rounded-lg p-2 font-mono focus:outline-none focus:border-emerald-500">
+                        <!-- Généré par JS -->
+                    </select>
+                </div>
+
+                <!-- Carte 3 : Grimoire des Commandes Apprises -->
+                <div class="bg-slate-900/90 rounded-xl border border-slate-800 p-4 shadow-xl flex flex-col">
+                    <div class="flex items-center justify-between mb-3 border-b border-slate-800 pb-2">
+                        <h3 class="text-xs font-bold uppercase tracking-wider text-slate-300 flex items-center gap-2">
+                            <i class="fa-solid fa-book-bookmark text-amber-400"></i> Grimoire des commandes
+                        </h3>
+                        <span id="grimoire-count" class="text-xs font-mono px-2 py-0.5 rounded bg-slate-800 text-slate-400">0 débloquée(s)</span>
+                    </div>
+
+                    <div id="grimoire-list" class="space-y-2 text-xs font-mono">
+                        <div id="grimoire-empty" class="text-slate-500 text-xs italic py-2 text-center">
+                            Aucune commande dans votre grimoire pour l'instant. Exécutez vos premiers sortilèges !
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+    </main>
+
+    <!-- SCRIPT DU JEU -->
+    <script>
+        // ==========================================
+        // 1. BASE DE DONNÉES DES 32 QUÊTES (CHAPITRES 1 À 5)
+        // ==========================================
+        const QUESTS = [
+            // CHAPITRE 1
+            {
+                id: 1, chapter: 1, chapterTitle: "Les Géôles de l'Oubli",
+                title: "1. Où suis-je ?",
+                desc: "Vous vous réveillez dans une cellule obscure du donjon d'Aethelgard. La première étape consiste à situer votre position dans l'arborescence du royaume.",
+                objective: "Afficher le chemin du répertoire actuel avec 'pwd'.",
+                hints: ["Tapez simplement la commande `pwd` puis appuyez sur Entrée.", "Syntaxe exacte : pwd"],
+                cmdRequired: "pwd",
+                grimoireUnlock: { cmd: "pwd", desc: "Affiche le chemin absolu du répertoire courant." }
+            },
+            {
+                id: 2, chapter: 1, chapterTitle: "Les Géôles de l'Oubli",
+                title: "2. Regarder autour de soi",
+                desc: "Vos yeux s'habituent à la pénombre. Voyons quels objets ou dossiers se trouvent dans cette cellule.",
+                objective: "Lister le contenu du répertoire courant avec 'ls'.",
+                hints: ["Utilisez la commande de listage de base.", "Syntaxe exacte : ls"],
+                cmdRequired: "ls",
+                grimoireUnlock: { cmd: "ls", desc: "Liste les fichiers et dossiers visibles du répertoire." }
+            },
+            {
+                id: 3, chapter: 1, chapterTitle: "Les Géôles de l'Oubli",
+                title: "3. Le Parchemin de l'Ancien",
+                desc: "Un vieux parchemin gît au sol. Vous devez lire son contenu pour comprendre ce qui s'est passé.",
+                objective: "Afficher le contenu du fichier 'parchemin_ancien.txt'.",
+                hints: ["Utilisez la commande `cat` suivie du nom du fichier.", "Syntaxe exacte : cat parchemin_ancien.txt"],
+                cmdRequired: "cat parchemin_ancien.txt",
+                grimoireUnlock: { cmd: "cat", desc: "Affiche le contenu texte d'un fichier." }
+            },
+            {
+                id: 4, chapter: 1, chapterTitle: "Les Géôles de l'Oubli",
+                title: "4. S'enfoncer dans les ténèbres",
+                desc: "Une porte dérobée menant à la cellule oubliée est entrouverte. Pénétrez à l'intérieur.",
+                objective: "Changer de répertoire vers 'cellule_oubliee'.",
+                hints: ["Utilisez la commande `cd` pour entrer dans le dossier.", "Syntaxe exacte : cd cellule_oubliee"],
+                cmdRequired: "cd cellule_oubliee",
+                grimoireUnlock: { cmd: "cd", desc: "Change le répertoire de travail actuel." }
+            },
+            {
+                id: 5, chapter: 1, chapterTitle: "Les Géôles de l'Oubli",
+                title: "5. Secret d'outre-tombe",
+                desc: "Certains secrets sont délibérément cachés au premier regard par les anciens mages.",
+                objective: "Afficher TOUS les fichiers (y compris les cachés) avec 'ls -a'.",
+                hints: ["L'option `-a` permet d'afficher les éléments masqués.", "Syntaxe exacte : ls -a"],
+                cmdRequired: "ls -a"
+            },
+            {
+                id: 6, chapter: 1, chapterTitle: "Les Géôles de l'Oubli",
+                title: "6. Graver une note de secours",
+                desc: "Vous décidez de laisser une trace de votre passage en créant un nouveau fichier vide.",
+                objective: "Créer un nouveau fichier nommé 'secours.txt' avec 'touch'.",
+                hints: ["La commande `touch` permet de créer un fichier vide.", "Syntaxe exacte : touch secours.txt"],
+                cmdRequired: "touch secours.txt",
+                grimoireUnlock: { cmd: "touch", desc: "Crée un nouveau fichier vide s'il n'existe pas." }
+            },
+            {
+                id: 7, chapter: 1, chapterTitle: "Les Géôles de l'Oubli",
+                title: "7. Inscrire un message",
+                desc: "Écrivez le mot de ralliement 'SOS' directement dans votre fichier de secours.",
+                objective: "Écrire 'SOS' dans 'secours.txt' avec une redirection '>'.",
+                hints: ["Combinez `echo` et la redirection `>`.", "Syntaxe exacte : echo \"SOS\" > secours.txt"],
+                cmdRequired: "echo \"SOS\" > secours.txt",
+                grimoireUnlock: { cmd: "echo", desc: "Affiche du texte ou l'écrit dans un fichier via '>'." }
+            },
+            {
+                id: 8, chapter: 1, chapterTitle: "Les Géôles de l'Oubli",
+                title: "8. Façonner un abri",
+                desc: "Il vous faut un endroit sûr pour entreposer vos trouvailles.",
+                objective: "Créer un nouveau dossier nommé 'cachette' avec 'mkdir'.",
+                hints: ["Utilisez `mkdir` suivi du nom du dossier.", "Syntaxe exacte : mkdir cachette"],
+                cmdRequired: "mkdir cachette",
+                grimoireUnlock: { cmd: "mkdir", desc: "Crée un nouveau répertoire/dossier." }
+            },
+
+            // CHAPITRE 2
+            {
+                id: 9, chapter: 2, chapterTitle: "La Forteresse Intérieure",
+                title: "9. Mettre à l'abri la sacoche",
+                desc: "Vous avez trouvé une vieille sacoche. Déplacez-la immédiatement dans votre nouveau dossier 'cachette'.",
+                objective: "Déplacer le fichier 'sacoche' vers le répertoire 'cachette/'.",
+                hints: ["Utilisez `mv` source destination.", "Syntaxe exacte : mv sacoche cachette/"],
+                cmdRequired: "mv sacoche cachette",
+                grimoireUnlock: { cmd: "mv", desc: "Déplace ou nomme à nouveau un fichier/dossier." }
+            },
+            {
+                id: 10, chapter: 2, chapterTitle: "La Forteresse Intérieure",
+                title: "10. Dupliquer le parchemin",
+                desc: "Pour ne pas risquer d'abîmer le parchemin d'origine, créez-en une copie exacte.",
+                objective: "Copier 'parchemin_ancien.txt' vers 'parchemin_copie.txt'.",
+                hints: ["Utilisez la commande `cp` source copie.", "Syntaxe exacte : cp parchemin_ancien.txt parchemin_copie.txt"],
+                cmdRequired: "cp parchemin_ancien.txt parchemin_copie.txt",
+                grimoireUnlock: { cmd: "cp", desc: "Copie un fichier vers un autre emplacement/nom." }
+            },
+            {
+                id: 11, chapter: 2, chapterTitle: "La Forteresse Intérieure",
+                title: "11. Effacer les traces",
+                desc: "Le fichier de secours est désormais inutile et risque d'alerter les gardes. Supprimez-le.",
+                objective: "Supprimer le fichier 'secours.txt' avec 'rm'.",
+                hints: ["Utilisez `rm` suivi du nom du fichier.", "Syntaxe exacte : rm secours.txt"],
+                cmdRequired: "rm secours.txt",
+                grimoireUnlock: { cmd: "rm", desc: "Supprime définitivement un fichier." }
+            },
+            {
+                id: 12, chapter: 2, chapterTitle: "La Forteresse Intérieure",
+                title: "12. Vers la cour intérieure",
+                desc: "Sortez de la cellule et rejoignez la cour intérieure de la forteresse.",
+                objective: "Se déplacer vers le répertoire absolu '/tour_interieure'.",
+                hints: ["Utilisez `cd` avec le chemin absolu.", "Syntaxe exacte : cd /tour_interieure"],
+                cmdRequired: "cd /tour_interieure"
+            },
+            {
+                id: 13, chapter: 2, chapterTitle: "La Forteresse Intérieure",
+                title: "13. Inspecter le journal de garde",
+                desc: "Un grand livre de garde gît sur une table de pierre. Consultez-le.",
+                objective: "Afficher le contenu du fichier 'journal.log'.",
+                hints: ["Utilisez `cat` pour lire le journal.", "Syntaxe exacte : cat journal.log"],
+                cmdRequired: "cat journal.log"
+            },
+            {
+                id: 14, chapter: 2, chapterTitle: "La Forteresse Intérieure",
+                title: "14. Premiers mots de la garde",
+                desc: "Le journal est très long. Seules les 3 premières lignes vous intéressent pour le moment.",
+                objective: "Afficher les 3 premières lignes de 'journal.log' avec 'head -n 3'.",
+                hints: ["La commande `head -n X` permet de lire l'en-tête.", "Syntaxe exacte : head -n 3 journal.log"],
+                cmdRequired: "head -n 3 journal.log",
+                grimoireUnlock: { cmd: "head", desc: "Affiche les premières lignes d'un fichier." }
+            },
+            {
+                id: 15, chapter: 2, chapterTitle: "La Forteresse Intérieure",
+                title: "15. Les dernières paroles",
+                desc: "Voyons désormais comment se termine ce fameux journal de garde.",
+                objective: "Afficher les 3 dernières lignes de 'journal.log' avec 'tail -n 3'.",
+                hints: ["La commande `tail -n X` affiche le bas d'un fichier.", "Syntaxe exacte : tail -n 3 journal.log"],
+                cmdRequired: "tail -n 3 journal.log",
+                grimoireUnlock: { cmd: "tail", desc: "Affiche les dernières lignes d'un fichier." }
+            },
+
+            // CHAPITRE 3
+            {
+                id: 16, chapter: 3, chapterTitle: "La Forge des Reliques",
+                title: "16. Pénétrer dans la forge",
+                desc: "La cour mène au brasier assoupi de la forge ancestrale. Entrez dans la forge.",
+                objective: "Changer de répertoire vers 'forge'.",
+                hints: ["Utilisez `cd forge` depuis le dossier courant.", "Syntaxe exacte : cd forge"],
+                cmdRequired: "cd forge"
+            },
+            {
+                id: 17, chapter: 3, chapterTitle: "La Forge des Reliques",
+                title: "17. Inscrire l'incantation",
+                desc: "L'enclume réclame la formule magique de réactivation des fourneaux.",
+                objective: "Écrire 'FLAMME-DU-DRAGON' dans le fichier 'sortilege.txt'.",
+                hints: ["Utilisez `echo` avec redirection `>` vers 'sortilege.txt'.", "Syntaxe exacte : echo \"FLAMME-DU-DRAGON\" > sortilege.txt"],
+                cmdRequired: "echo \"FLAMME-DU-DRAGON\" > sortilege.txt"
+            },
+            {
+                id: 18, chapter: 3, chapterTitle: "La Forge des Reliques",
+                title: "18. Filtrer l'énergie",
+                desc: "Vérifiez que le mot-clé 'DRAGON' est bien présent dans votre sortilège.",
+                objective: "Rechercher la chaîne 'DRAGON' dans 'sortilege.txt' avec 'grep'.",
+                hints: ["La commande `grep` permet de filtrer un mot-clé.", "Syntaxe exacte : grep \"DRAGON\" sortilege.txt"],
+                cmdRequired: "grep \"DRAGON\" sortilege.txt",
+                grimoireUnlock: { cmd: "grep", desc: "Filtre et affiche les lignes contenant un motif." }
+            },
+            {
+                id: 19, chapter: 3, chapterTitle: "La Forge des Reliques",
+                title: "19. Mesurer la recette",
+                desc: "Un livre de recettes métallurgiques est posé à côté de l'enclume. Combien de lignes comporte-t-il ?",
+                objective: "Compter le nombre de lignes du fichier 'recette.txt' avec 'wc -l'.",
+                hints: ["La commande `wc -l` compte les lignes.", "Syntaxe exacte : wc -l recette.txt"],
+                cmdRequired: "wc -l recette.txt",
+                grimoireUnlock: { cmd: "wc", desc: "Compte le nombre de lignes (-l) ou mots (-w)." }
+            },
+            {
+                id: 20, chapter: 3, chapterTitle: "La Forge des Reliques",
+                title: "20. Purifier la vision",
+                desc: "L'accumulation de poussière de fer sur l'écran masque vos runes. Effacez l'écran du terminal.",
+                objective: "Nettoyer l'affichage du terminal avec 'clear'.",
+                hints: ["Utilisez la commande `clear`.", "Syntaxe exacte : clear"],
+                cmdRequired: "clear",
+                grimoireUnlock: { cmd: "clear", desc: "Efface l'historique d'affichage du terminal." }
+            },
+            {
+                id: 21, chapter: 3, chapterTitle: "La Forge des Reliques",
+                title: "21. Le Pipe des Anciens",
+                desc: "Les mages assemblent leurs sortilèges en combinant les pouvoirs via un tube de puissance (|).",
+                objective: "Afficher 'grimoire_secret.txt' et filtrer la ligne contenant 'AETHEL' via un pipe '|'.",
+                hints: ["Combinez `cat grimoire_secret.txt` et `grep \"AETHEL\"` avec `|`.", "Syntaxe exacte : cat grimoire_secret.txt | grep \"AETHEL\""],
+                cmdRequired: "cat grimoire_secret.txt | grep \"AETHEL\"",
+                grimoireUnlock: { cmd: "|", desc: "Tube (Pipe) : transmet la sortie d'une commande à l'entrée de la suivante." }
+            },
+            {
+                id: 22, chapter: 3, chapterTitle: "La Forge des Reliques",
+                title: "22. Redirection du savoir",
+                desc: "Extrairez l'essence des runes et sauvegardez-la directement dans un nouveau fichier.",
+                objective: "Filtrer 'RUNIC' dans 'runes.txt' et rediriger le résultat vers 'extrait.txt'.",
+                hints: ["Utilisez `grep \"RUNIC\" runes.txt > extrait.txt`.", "Syntaxe exacte : grep \"RUNIC\" runes.txt > extrait.txt"]
+            },
+
+            // CHAPITRE 4
+            {
+                id: 23, chapter: 4, chapterTitle: "Les Archives à la Recherche",
+                title: "23. Accéder au Scriptrium",
+                desc: "Quittez la forge et rendez-vous immédiatement dans la grande bibliothèque.",
+                objective: "Se déplacer vers le répertoire absolu '/bibliotheque'.",
+                hints: ["Utilisez `cd /bibliotheque`.", "Syntaxe exacte : cd /bibliotheque"],
+                cmdRequired: "cd /bibliotheque"
+            },
+            {
+                id: 24, chapter: 4, chapterTitle: "Les Archives à la Recherche",
+                title: "24. Première lame du registre",
+                desc: "Consultez le sommet du registre amnésique conservé sur les étagères de cristal.",
+                objective: "Afficher les 5 premières lignes du fichier 'registre_amnesique.txt'.",
+                hints: ["Utilisez `head -n 5 registre_amnesique.txt`.", "Syntaxe exacte : head -n 5 registre_amnesique.txt"],
+                cmdRequired: "head -n 5 registre_amnesique.txt"
+            },
+            {
+                id: 25, chapter: 4, chapterTitle: "Les Archives à la Recherche",
+                title: "25. Extraire la mémoire d'Aethelgard",
+                desc: "Isolez toutes les occurrences parlant d'Aethelgard dans le registre amnésique et conservez-les dans 'resultat.txt'.",
+                objective: "Rechercher 'Aethelgard' dans 'registre_amnesique.txt' et rediriger vers 'resultat.txt'.",
+                hints: ["Syntaxe : grep \"Aethelgard\" registre_amnesique.txt > resultat.txt", "Pensez aux guillemets !"],
+                cmdRequired: "grep \"Aethelgard\" registre_amnesique.txt > resultat.txt"
+            },
+            {
+                id: 26, chapter: 4, chapterTitle: "Les Archives à la Recherche",
+                title: "26. Compléter la note sans écraser",
+                desc: "Vous devez ajouter une annotation à la suite du fichier 'resultat.txt' sans effacer ce qu'il contient déjà.",
+                objective: "Ajouter la ligne 'Note d'exploration' à la fin de 'resultat.txt' avec '>>'.",
+                hints: ["La double redirection `>>` permet d'ajouter à la suite.", "Syntaxe exacte : echo \"Note d'exploration\" >> resultat.txt"],
+                cmdRequired: "echo \"Note d'exploration\" >> resultat.txt",
+                grimoireUnlock: { cmd: ">>", desc: "Redirection d'ajout : concatène la sortie à la fin du fichier sans l'écraser." }
+            },
+            {
+                id: 27, chapter: 4, chapterTitle: "Les Archives à la Recherche",
+                title: "27. Le Manifeste des Ombres",
+                desc: "Combien de mots comporte le manifeste des ombres scellé sous verre ?",
+                objective: "Compter le nombre de mots dans 'manifeste.txt' avec 'wc -w'.",
+                hints: ["L'option `-w` de `wc` permet de compter les mots.", "Syntaxe exacte : wc -w manifeste.txt"],
+                cmdRequired: "wc -w manifeste.txt"
+            },
+
+            // CHAPITRE 5
+            {
+                id: 28, chapter: 5, chapterTitle: "Le Sceau du Trône",
+                title: "28. Vers la salle du trône",
+                desc: "Le temps presse. Rendez-vous au sommet du donjon, dans la salle du trône.",
+                objective: "Changer de répertoire vers '/salle_du_trone'.",
+                hints: ["Utilisez la commande `cd /salle_du_trone`.", "Syntaxe exacte : cd /salle_du_trone"],
+                cmdRequired: "cd /salle_du_trone"
+            },
+            {
+                id: 29, chapter: 5, chapterTitle: "Le Sceau du Trône",
+                title: "29. Le cercle de rituel",
+                desc: "Avant d'invoquer le pouvoir ultime, érigez un répertoire dédié au rituel.",
+                objective: "Créer le dossier 'rituel' dans la salle du trône.",
+                hints: ["Utilisez `mkdir rituel`.", "Syntaxe exacte : mkdir rituel"],
+                cmdRequired: "mkdir rituel"
+            },
+            {
+                id: 30, chapter: 5, chapterTitle: "Le Sceau du Trône",
+                title: "30. Transporter le sceau royal",
+                desc: "Copiez le sceau sacré présent dans la pièce directement à l'intérieur du dossier 'rituel'.",
+                objective: "Copier 'sceau.txt' dans le répertoire 'rituel/'.",
+                hints: ["Utilisez `cp sceau.txt rituel/`.", "Syntaxe exacte : cp sceau.txt rituel"],
+                cmdRequired: "cp sceau.txt rituel"
+            },
+            {
+                id: 31, chapter: 5, chapterTitle: "Le Sceau du Trône",
+                title: "31. L'Incantation Finale",
+                desc: "Combinez la puissance du registre amnésique et du rituel : filtrez le mot 'MAGIE' depuis le registre de la bibliothèque et envoyez le tout dans 'rituel/puissance.txt'.",
+                objective: "Lire '/bibliotheque/registre_amnesique.txt', filtrer 'MAGIE' via pipe '|' et écrire dans 'rituel/puissance.txt'.",
+                hints: ["Cat le registre, tube vers grep \"MAGIE\", redirection vers rituel/puissance.txt", "Syntaxe : cat /bibliotheque/registre_amnesique.txt | grep \"MAGIE\" > rituel/puissance.txt"],
+                cmdRequired: "cat /bibliotheque/registre_amnesique.txt | grep \"MAGIE\" > rituel/puissance.txt"
+            },
+            {
+                id: 32, chapter: 5, chapterTitle: "Le Sceau du Trône",
+                title: "32. Le Grand Éveil d'Aethelgard",
+                desc: "Relisez la puissance rassemblée dans le fichier du rituel pour libérer Aethelgard de la malédiction.",
+                objective: "Afficher le contenu de 'rituel/puissance.txt' pour triompher !",
+                hints: ["Affichez 'rituel/puissance.txt' avec `cat`.", "Syntaxe exacte : cat rituel/puissance.txt"],
+                cmdRequired: "cat rituel/puissance.txt"
+            }
+        ];
+
+        // ==========================================
+        // 2. SYSTÈME DE FICHIERS VIRTUEL (VFS)
+        // ==========================================
+        let initialVFS = {
+            type: "dir",
+            children: {
+                "cellule_oubliee": {
+                    type: "dir",
+                    children: {
+                        "parchemin_ancien.txt": { type: "file", content: "Le royaume d'Aethelgard est scellé par les ombres. Seul le terminal royal pourra restaurer l'équilibre." },
+                        "journal.log": { type: "file", content: "08:00 - Inspection de la cellule\n12:00 - RAS\n18:00 - Bruit étrange sous les pavés" },
+                        "sacoche": { type: "file", content: "Contient des clés rouillées et 3 pièces d'or." }
+                    }
+                },
+                "tour_interieure": {
+                    type: "dir",
+                    children: {
+                        "journal.log": { type: "file", content: "Ligne 1: Ouverture des portes nord\nLigne 2: Patrouille en cours\nLigne 3: RAS dans le couloir principal\nLigne 4: Un courant d'air froid traverse la tour\nLigne 5: Fermeture du pont-levis" },
+                        "registre.txt": { type: "file", content: "Gardien A - Présent\nGardien B - Absent\nGardien C - De garde" },
+                        "forge": {
+                            type: "dir",
+                            children: {
+                                "recette.txt": { type: "file", content: "1. Chauffer l'enclume\n2. Ajouter de la poussière d'étoile\n3. Marquer du sceau royal\n4. Laisser refroidir sous la lune" },
+                                "grimoire_secret.txt": { type: "file", content: "Formule 1: LUMOS\nFormule 2: AETHEL-RUNIC-POWER\nFormule 3: NOX" },
+                                "runes.txt": { type: "file", content: "RUNE_ALPHA\nRUNIC_ENERGY_100\nRUNE_BETA" }
+                            }
+                        }
+                    }
+                },
+                "bibliotheque": {
+                    type: "dir",
+                    children: {
+                        "registre_amnesique.txt": { type: "file", content: "L'histoire oubliée d'Aethelgard repose ici.\nAethelgard était jadis une cité resplendissante.\nLe grand roi gouvernait avec sagesse.\nMAGIE ANCESTRALE CONCENTRÉE DANS LE SCEAU.\nLes ombres ont englouti les archives.\nFin du premier registre." },
+                        "manifeste.txt": { type: "file", content: "Nous jurons de protéger la connaissance sacrée contre l'oubli et la ruine éternelle." }
+                    }
+                },
+                "salle_du_trone": {
+                    type: "dir",
+                    children: {
+                        "sceau.txt": { type: "file", content: "SCEAU_ROYAL_DE_PROTECTION_AETHEL" }
+                    }
+                }
+            }
+        };
+
+        // État de l'application
+        let gameState = {
+            currentQuestIndex: 0,
+            unlockedGrimoire: [],
+            currentPath: ["cellule_oubliee"], // Démarre directement dans cellule_oubliee ou racine
+            vfs: JSON.parse(JSON.stringify(initialVFS)),
+            currentHintLevel: 0
+        };
+
+        // ==========================================
+        // 3. LOGIQUE DU SYSTEME DE FICHIERS (VFS)
+        // ==========================================
+        function getNodeAtPath(pathArray) {
+            let curr = gameState.vfs;
+            for (let name of pathArray) {
+                if (!curr || curr.type !== "dir" || !curr.children[name]) {
+                    return null;
+                }
+                curr = curr.children[name];
+            }
+            return curr;
+        }
+
+        function resolvePathStr(pathStr) {
+            let parts = pathStr.split('/').filter(Boolean);
+            let targetPath = pathStr.startsWith('/') ? [] : [...gameState.currentPath];
+
+            for (let part of parts) {
+                if (part === '.') continue;
+                if (part === '..') {
+                    if (targetPath.length > 0) targetPath.pop();
+                } else {
+                    targetPath.push(part);
+                }
+            }
+            return targetPath;
+        }
+
+        function formatPathStr(pathArray) {
+            return '/' + pathArray.join('/');
+        }
+
+        // ==========================================
+        // 4. MOTEUR DE COMMANDES & EXECUTION
+        // ==========================================
+        const terminalOutput = document.getElementById('terminal-output');
+        const terminalInput = document.getElementById('terminal-input');
+        const promptPath = document.getElementById('prompt-path');
+        const terminalPwdDisplay = document.getElementById('terminal-pwd-display');
+
+        function scrollToBottom() {
+            setTimeout(() => {
+                terminalOutput.scrollTop = terminalOutput.scrollHeight;
+            }, 10);
+        }
+
+        function appendLine(text, type = 'normal') {
+            const line = document.createElement('div');
+            line.className = "leading-relaxed break-all font-mono text-sm";
+
+            if (type === 'cmd') {
+                line.className += " text-emerald-400 font-semibold flex items-start gap-1 mt-2";
+                line.innerHTML = `<span class="text-emerald-500 select-none">&gt;</span> <span>${escapeHTML(text)}</span>`;
+            } else if (type === 'error') {
+                line.className += " text-rose-400";
+                line.textContent = text;
+            } else if (type === 'success') {
+                line.className += " text-emerald-300 font-medium";
+                line.textContent = text;
+            } else if (type === 'system') {
+                line.className += " text-amber-300 italic";
+                line.textContent = text;
+            } else {
+                line.className += " text-slate-300";
+                line.textContent = text;
+            }
+
+            terminalOutput.appendChild(line);
+            scrollToBottom();
+        }
+
+        function escapeHTML(str) {
+            return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+        }
+
+        function processCommand(rawCmd) {
+            const trimmed = rawCmd.trim();
+            if (!trimmed) return;
+
+            appendLine(rawCmd, 'cmd');
+
+            // Gérer les pipes |
+            if (trimmed.includes('|')) {
+                executePipeCommand(trimmed);
+                checkQuestProgression(trimmed);
+                saveState();
+                return;
+            }
+
+            // Gérer les redirections > et >>
+            if (trimmed.includes('>') || trimmed.includes('>>')) {
+                executeRedirectionCommand(trimmed);
+                checkQuestProgression(trimmed);
+                saveState();
+                return;
+            }
+
+            // Commande simple
+            const tokens = trimmed.match(/(?:[^\s"]+|"[^"]*")+/g) || [];
+            const cmd = tokens[0]?.toLowerCase();
+            const args = tokens.slice(1).map(a => a.replace(/^"|"$/g, ''));
+
+            executeSingleCommand(cmd, args, rawCmd);
+            checkQuestProgression(trimmed);
+            saveState();
+        }
+
+        function executeSingleCommand(cmd, args, fullRawStr) {
+            const currentDirNode = getNodeAtPath(gameState.currentPath);
+
+            switch (cmd) {
+                case 'pwd':
+                    appendLine(formatPathStr(gameState.currentPath));
+                    break;
+
+                case 'ls': {
+                    const showHidden = args.includes('-a');
+                    let targetDir = currentDirNode;
+                    
+                    // Si un dossier est passé en paramètre
+                    const pathArg = args.find(a => !a.startsWith('-'));
+                    if (pathArg) {
+                        const targetPath = resolvePathStr(pathArg);
+                        targetDir = getNodeAtPath(targetPath);
+                    }
+
+                    if (!targetDir || targetDir.type !== 'dir') {
+                        appendLine(`ls: impossible d'accéder à '${pathArg || ''}': Aucun fichier ou dossier de ce nom`, 'error');
+                        break;
+                    }
+
+                    let entries = Object.keys(targetDir.children);
+                    if (!showHidden) {
+                        entries = entries.filter(e => !e.startsWith('.'));
+                    }
+
+                    if (entries.length === 0) {
+                        appendLine('(répertoire vide)', 'system');
+                    } else {
+                        const formatted = entries.map(name => {
+                            const isDir = targetDir.children[name].type === 'dir';
+                            return isDir ? `<span class="text-sky-400 font-bold">${name}/</span>` : `<span class="text-slate-200">${name}</span>`;
+                        }).join('   ');
+                        const div = document.createElement('div');
+                        div.className = "py-1 font-mono text-sm";
+                        div.innerHTML = formatted;
+                        terminalOutput.appendChild(div);
+                        scrollToBottom();
+                    }
+                    break;
+                }
+
+                case 'cd': {
+                    const target = args[0] || '/';
+                    const targetPath = resolvePathStr(target);
+                    const targetNode = getNodeAtPath(targetPath);
+
+                    if (targetNode && targetNode.type === 'dir') {
+                        gameState.currentPath = targetPath;
+                        updatePrompt();
+                    } else {
+                        appendLine(`cd: ${target}: Aucun fichier ou dossier de ce nom`, 'error');
+                    }
+                    break;
+                }
+
+                case 'cat': {
+                    if (args.length === 0) {
+                        appendLine("cat: argument manquant", 'error');
+                        break;
+                    }
+                    const filePath = resolvePathStr(args[0]);
+                    const fileNode = getNodeAtPath(filePath);
+                    if (!fileNode) {
+                        appendLine(`cat: ${args[0]}: Aucun fichier de ce type`, 'error');
+                    } else if (fileNode.type === 'dir') {
+                        appendLine(`cat: ${args[0]}: Est un dossier`, 'error');
+                    } else {
+                        appendLine(fileNode.content);
+                    }
+                    break;
+                }
+
+                case 'touch': {
+                    if (!args[0]) {
+                        appendLine("touch: nom de fichier manquant", 'error');
+                        break;
+                    }
+                    const filename = args[0];
+                    if (!currentDirNode.children[filename]) {
+                        currentDirNode.children[filename] = { type: 'file', content: '' };
+                    }
+                    break;
+                }
+
+                case 'mkdir': {
+                    if (!args[0]) {
+                        appendLine("mkdir: nom de dossier manquant", 'error');
+                        break;
+                    }
+                    const dirname = args[0];
+                    if (!currentDirNode.children[dirname]) {
+                        currentDirNode.children[dirname] = { type: 'dir', children: {} };
+                    }
+                    break;
+                }
+
+                case 'rm': {
+                    if (!args[0]) {
+                        appendLine("rm: fichier manquant", 'error');
+                        break;
+                    }
+                    const filename = args[0];
+                    if (currentDirNode.children[filename]) {
+                        delete currentDirNode.children[filename];
+                    } else {
+                        appendLine(`rm: impossible de supprimer '${filename}': Fichier inexistant`, 'error');
+                    }
+                    break;
+                }
+
+                case 'mv':
+                case 'cp': {
+                    if (args.length < 2) {
+                        appendLine(`${cmd}: arguments manquants. Syntaxe : ${cmd} source destination`, 'error');
+                        break;
+                    }
+                    const srcName = args[0];
+                    let destStr = args[1];
+
+                    const srcNode = currentDirNode.children[srcName];
+                    if (!srcNode) {
+                        appendLine(`${cmd}: impossible d'accéder à '${srcName}': Aucun fichier ou dossier de ce nom`, 'error');
+                        break;
+                    }
+
+                    // Résolution destination
+                    let destPath = resolvePathStr(destStr);
+                    let destNode = getNodeAtPath(destPath);
+
+                    if (destNode && destNode.type === 'dir') {
+                        // Si la destination est un dossier existant, on met le fichier dedans
+                        destNode.children[srcName] = JSON.parse(JSON.stringify(srcNode));
+                    } else {
+                        // Sinon on traite comme un nouveau nom de fichier dans le dossier courant ou cible
+                        const parentPath = destPath.slice(0, -1);
+                        const newName = destPath[destPath.length - 1];
+                        const parentNode = getNodeAtPath(parentPath);
+
+                        if (parentNode && parentNode.type === 'dir') {
+                            parentNode.children[newName] = JSON.parse(JSON.stringify(srcNode));
+                        } else {
+                            appendLine(`${cmd}: dossier de destination valide requis`, 'error');
+                            break;
+                        }
+                    }
+
+                    // Si c'était un 'mv', on supprime la source
+                    if (cmd === 'mv') {
+                        delete currentDirNode.children[srcName];
+                    }
+                    break;
+                }
+
+                case 'head': {
+                    let n = 10;
+                    let fileIndex = 0;
+                    if (args[0] === '-n' && args[1]) {
+                        n = parseInt(args[1], 10) || 10;
+                        fileIndex = 2;
+                    }
+                    const filename = args[fileIndex];
+                    if (!filename) {
+                        appendLine("head: nom de fichier manquant", 'error');
+                        break;
+                    }
+                    const fileNode = getNodeAtPath(resolvePathStr(filename));
+                    if (!fileNode || fileNode.type !== 'file') {
+                        appendLine(`head: impossible d'ouvrir '${filename}'`, 'error');
+                    } else {
+                        const lines = fileNode.content.split('\n').slice(0, n).join('\n');
+                        appendLine(lines);
+                    }
+                    break;
+                }
+
+                case 'tail': {
+                    let n = 10;
+                    let fileIndex = 0;
+                    if (args[0] === '-n' && args[1]) {
+                        n = parseInt(args[1], 10) || 10;
+                        fileIndex = 2;
+                    }
+                    const filename = args[fileIndex];
+                    if (!filename) {
+                        appendLine("tail: nom de fichier manquant", 'error');
+                        break;
+                    }
+                    const fileNode = getNodeAtPath(resolvePathStr(filename));
+                    if (!fileNode || fileNode.type !== 'file') {
+                        appendLine(`tail: impossible d'ouvrir '${filename}'`, 'error');
+                    } else {
+                        const lines = fileNode.content.split('\n');
+                        const sliced = lines.slice(Math.max(lines.length - n, 0)).join('\n');
+                        appendLine(sliced);
+                    }
+                    break;
+                }
+
+                case 'grep': {
+                    if (args.length < 2) {
+                        appendLine("grep: motif et fichier requis", 'error');
+                        break;
+                    }
+                    const pattern = args[0];
+                    const filename = args[1];
+                    const fileNode = getNodeAtPath(resolvePathStr(filename));
+                    if (!fileNode || fileNode.type !== 'file') {
+                        appendLine(`grep: ${filename}: Aucun fichier de ce type`, 'error');
+                    } else {
+                        const matches = fileNode.content.split('\n').filter(line => line.includes(pattern));
+                        if (matches.length > 0) {
+                            appendLine(matches.join('\n'));
+                        }
+                    }
+                    break;
+                }
+
+                case 'wc': {
+                    const opt = args[0];
+                    const filename = args[1] || args[0];
+                    const fileNode = getNodeAtPath(resolvePathStr(filename));
+
+                    if (!fileNode || fileNode.type !== 'file') {
+                        appendLine(`wc: ${filename}: Aucun fichier de ce type`, 'error');
+                    } else {
+                        if (opt === '-l') {
+                            const count = fileNode.content.split('\n').length;
+                            appendLine(`${count} ${filename}`);
+                        } else if (opt === '-w') {
+                            const count = fileNode.content.trim().split(/\s+/).filter(Boolean).length;
+                            appendLine(`${count} ${filename}`);
+                        } else {
+                            const lines = fileNode.content.split('\n').length;
+                            const words = fileNode.content.trim().split(/\s+/).filter(Boolean).length;
+                            appendLine(`${lines} ${words} ${filename}`);
+                        }
+                    }
+                    break;
+                }
+
+                case 'echo': {
+                    appendLine(args.join(' '));
+                    break;
+                }
+
+                case 'clear': {
+                    terminalOutput.innerHTML = '';
+                    break;
+                }
+
+                case 'help': {
+                    appendLine("Commandes disponibles : pwd, ls, cd, cat, touch, mkdir, rm, mv, cp, head, tail, grep, wc, echo, clear", 'system');
+                    break;
+                }
+
+                default:
+                    appendLine(`Commande '${cmd}' non reconnue. Tapez 'help' pour la liste des commandes.`, 'error');
+                    break;
+            }
+        }
+
+        // Gestion de la redirection > et >>
+        function executeRedirectionCommand(cmdStr) {
+            const isAppend = cmdStr.includes('>>');
+            const operator = isAppend ? '>>' : '>';
+            const parts = cmdStr.split(operator);
+
+            const leftCmd = parts[0].trim();
+            const rightFile = parts[1].trim();
+
+            if (!leftCmd || !rightFile) {
+                appendLine("Erreur de syntaxe dans la redirection", 'error');
+                return;
+            }
+
+            // Capturer la sortie de leftCmd
+            let outputText = "";
+            if (leftCmd.startsWith("echo ")) {
+                outputText = leftCmd.substring(5).replace(/^"|"$/g, '');
+            } else if (leftCmd.startsWith("cat ")) {
+                const fName = leftCmd.substring(4).trim();
+                const node = getNodeAtPath(resolvePathStr(fName));
+                if (node && node.type === 'file') outputText = node.content;
+            } else if (leftCmd.startsWith("grep ")) {
+                const tokens = leftCmd.match(/(?:[^\s"]+|"[^"]*")+/g) || [];
+                const pattern = tokens[1]?.replace(/^"|"$/g, '');
+                const filename = tokens[2];
+                const node = getNodeAtPath(resolvePathStr(filename));
+                if (node && node.type === 'file') {
+                    outputText = node.content.split('\n').filter(l => l.includes(pattern)).join('\n');
+                }
+            } else {
+                outputText = "Résultat généré";
+            }
+
+            // Écriture dans le fichier de destination
+            const targetPath = resolvePathStr(rightFile);
+            const parentPath = targetPath.slice(0, -1);
+            const filename = targetPath[targetPath.length - 1];
+            const parentNode = getNodeAtPath(parentPath);
+
+            if (parentNode && parentNode.type === 'dir') {
+                if (!parentNode.children[filename]) {
+                    parentNode.children[filename] = { type: 'file', content: '' };
+                }
+                if (isAppend && parentNode.children[filename].content) {
+                    parentNode.children[filename].content += '\n' + outputText;
+                } else {
+                    parentNode.children[filename].content = outputText;
+                }
+                appendLine(`✓ Redirection effectuée vers ${rightFile}`, 'success');
+            } else {
+                appendLine(`Redirection impossible : dossier parent introuvable`, 'error');
+            }
+        }
+
+        // Gestion du Pipe |
+        function executePipeCommand(cmdStr) {
+            const parts = cmdStr.split('|').map(p => p.trim());
+            const first = parts[0];
+            const second = parts[1];
+
+            let intermediateText = "";
+
+            // Exécution commande 1 (cat ou grep)
+            if (first.startsWith("cat ")) {
+                const fName = first.substring(4).trim();
+                const node = getNodeAtPath(resolvePathStr(fName));
+                if (node && node.type === 'file') intermediateText = node.content;
+            }
+
+            // Exécution commande 2 (grep, etc.)
+            if (second.startsWith("grep ")) {
+                const pattern = second.substring(5).replace(/^"|"$/g, '').trim();
+                const lines = intermediateText.split('\n').filter(l => l.includes(pattern));
+                appendLine(lines.join('\n'));
+            } else {
+                appendLine(intermediateText);
+            }
+        }
+
+        function updatePrompt() {
+            const pathStr = formatPathStr(gameState.currentPath);
+            promptPath.textContent = pathStr;
+            terminalPwdDisplay.textContent = pathStr;
+        }
+
+        // ==========================================
+        // 5. GESTION DES QUÊTES ET DU GRIMOIRE
+        // ==========================================
+        function updateUI() {
+            const quest = QUESTS[gameState.currentPathIndex || gameState.currentQuestIndex];
+            
+            // MàJ En-tête quête
+            document.getElementById('chapter-badge').textContent = `CHAPITRE ${quest.chapter} : ${quest.chapterTitle.toUpperCase()}`;
+            document.getElementById('quest-number-badge').textContent = `Quête ${quest.id} / ${QUESTS.length}`;
+            document.getElementById('quest-title').textContent = quest.title;
+            document.getElementById('quest-description').textContent = quest.desc;
+            document.getElementById('quest-objective').textContent = quest.objective;
+
+            // Réinitialiser la zone d'indice
+            gameState.currentHintLevel = 0;
+            const hintBox = document.getElementById('hint-box');
+            hintBox.classList.add('hidden');
+            document.getElementById('hint-btn-text').textContent = "Indice (1/2)";
+
+            // Débloquer commande dans le grimoire si applicable
+            if (quest.grimoireUnlock) {
+                unlockGrimoire(quest.grimoireUnlock);
+            }
+
+            // Mettre à jour le sélecteur
+            renderQuestSelect();
+            renderGrimoire();
+        }
+
+        function checkQuestProgression(cmdEntered) {
+            const currentQuest = QUESTS[gameState.currentQuestIndex];
+            const targetCmd = currentQuest.cmdRequired.trim().toLowerCase();
+            const userCmd = cmdEntered.trim().toLowerCase();
+
+            // Vérification simplifiée ou exacte
+            if (userCmd === targetCmd || (userCmd.includes(targetCmd) && targetCmd.length > 3)) {
+                appendLine(`🎉 QUÊTE ${currentQuest.id} ACCOMPLIE !`, 'success');
+                
+                if (gameState.currentQuestIndex < QUESTS.length - 1) {
+                    gameState.currentQuestIndex++;
+                    setTimeout(() => {
+                        appendLine(`--- NOUVEL OBJECTIF : ${QUESTS[gameState.currentQuestIndex].title} ---`, 'system');
+                        updateUI();
+                    }, 500);
+                } else {
+                    appendLine("👑 FÉLICITATIONS ! VOUS AVEZ RESTAURÉ LES ARCHIVES D'AETHELGARD ET TRIOMPHÉ DES 32 QUÊTES !", 'success');
+                }
+            }
+        }
+
+        function unlockGrimoire(unlockObj) {
+            if (!gameState.unlockedGrimoire.some(g => g.cmd === unlockObj.cmd)) {
+                gameState.unlockedGrimoire.push(unlockObj);
+            }
+        }
+
+        function renderGrimoire() {
+            const list = document.getElementById('grimoire-list');
+            const count = document.getElementById('grimoire-count');
+
+            count.textContent = `${gameState.unlockedGrimoire.length} débloquée(s)`;
+
+            if (gameState.unlockedGrimoire.length === 0) {
+                list.innerHTML = `<div id="grimoire-empty" class="text-slate-500 text-xs italic py-2 text-center">Aucune commande dans votre grimoire pour l'instant.</div>`;
+                return;
+            }
+
+            list.innerHTML = gameState.unlockedGrimoire.map(item => `
+                <div class="p-2 rounded bg-slate-950/80 border border-slate-800 flex flex-col gap-0.5">
+                    <span class="text-emerald-400 font-bold">${item.cmd}</span>
+                    <span class="text-[11px] text-slate-400 leading-tight">${item.desc}</span>
+                </div>
+            `).join('');
+        }
+
+        function renderQuestSelect() {
+            const select = document.getElementById('quest-select');
+            select.innerHTML = QUESTS.map((q, idx) => `
+                <option value="${idx}" ${idx === gameState.currentQuestIndex ? 'selected' : ''}>
+                    Quête ${q.id} : ${q.title} (Chap. ${q.chapter})
+                </option>
+            `).join('');
+        }
+
+        // ==========================================
+        // 6. ÉVÉNEMENTS & INITIALISATION
+        // ==========================================
+        terminalInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                const val = terminalInput.value;
+                terminalInput.value = '';
+                processCommand(val);
+            }
+        });
+
+        document.getElementById('send-cmd-btn').addEventListener('click', () => {
+            const val = terminalInput.value;
+            terminalInput.value = '';
+            processCommand(val);
+        });
+
+        // Indices
+        document.getElementById('hint-btn').addEventListener('click', () => {
+            const currentQuest = QUESTS[gameState.currentQuestIndex];
+            const hintBox = document.getElementById('hint-box');
+            const hintBtnText = document.getElementById('hint-btn-text');
+
+            if (gameState.currentHintLevel === 0) {
+                hintBox.textContent = `💡 Indice 1: ${currentQuest.hints[0]}`;
+                hintBox.classList.remove('hidden');
+                gameState.currentHintLevel = 1;
+                hintBtnText.textContent = "Indice (2/2)";
+            } else if (gameState.currentHintLevel === 1) {
+                hintBox.textContent = `💡 Indice 2 (Solution): ${currentQuest.hints[1]}`;
+                gameState.currentHintLevel = 2;
+                hintBtnText.textContent = "Indices épuisés";
+            }
+        });
+
+        // Passer la quête
+        document.getElementById('skip-btn').addEventListener('click', () => {
+            if (gameState.currentQuestIndex < QUESTS.length - 1) {
+                gameState.currentQuestIndex++;
+                appendLine(`Quête passée manuellement.`, 'system');
+                updateUI();
+                saveState();
+            }
+        });
+
+        // Sélecteur de quêtes
+        document.getElementById('quest-select').addEventListener('change', (e) => {
+            gameState.currentQuestIndex = parseInt(e.target.value, 10);
+            updateUI();
+            saveState();
+        });
+
+        // Réinitialisation globale
+        document.getElementById('reset-btn').addEventListener('click', () => {
+            localStorage.removeItem('aethelgard_state');
+            gameState = {
+                currentQuestIndex: 0,
+                unlockedGrimoire: [],
+                currentPath: ["cellule_oubliee"],
+                vfs: JSON.parse(JSON.stringify(initialVFS)),
+                currentHintLevel: 0
+            };
+            terminalOutput.innerHTML = '';
+            appendLine("--- RÉINITIALISATION COMPLÈTE EFFECTUÉE ---", 'system');
+            updatePrompt();
+            updateUI();
+        });
+
+        // Sauvegarde / Chargement LocalStorage
+        function saveState() {
+            localStorage.setItem('aethelgard_state', JSON.stringify(gameState));
+        }
+
+        function loadState() {
+            const saved = localStorage.getItem('aethelgard_state');
+            if (saved) {
+                try {
+                    gameState = JSON.parse(saved);
+                } catch(e) {
+                    console.error("Erreur de chargement du localstorage", e);
+                }
+            }
+        }
+
+        // Démarrage de l'application
+        window.onload = () => {
+            loadState();
+            updatePrompt();
+            updateUI();
+            
+            appendLine("=== TERMINUS : LES ARCHIVES D'AETHELGARD ===", 'system');
+            appendLine("Entrez des commandes shell pour explorer le royaume et accomplir les 32 quêtes.", 'system');
+            appendLine("Tapez 'help' à tout moment pour la liste des sortilèges.", 'system');
+            appendLine("--------------------------------------------------", 'system');
+        };
+    </script>
+</body>
+</html>
